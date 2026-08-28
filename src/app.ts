@@ -329,12 +329,7 @@ $('#clear-data').addEventListener('click', async () => {
 });
 
 async function updateNetworkStatus(): Promise<void> {
-  let online = navigator.onLine;
-  if (online) {
-    try { await fetch(`/__network_check__?${Date.now()}`, { cache: 'no-store' }); }
-    catch { online = false; }
-  }
-  setNetworkStatus(online);
+  setNetworkStatus(navigator.onLine);
 }
 function setNetworkStatus(online: boolean): void {
   const status = $('#network-status'); status.classList.toggle('offline', !online);
