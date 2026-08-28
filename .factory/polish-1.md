@@ -38,3 +38,16 @@ Base reviewed: `12a57713fce6e60120e075123f7ed16b39df7640`. Evidence names refer 
 | F-1-80 | Import failures now give one safe accepted-format instruction. | source/browser error path |
 
 No finding is deferred. The unavailable Plus checkout is not a pending product promise: its dead CTA, price, and hosted-checkout claims were removed until a billing work order enables it.
+
+## Retry 1 — release-build and final mobile closure
+
+| Finding | Change made | Evidence |
+| --- | --- | --- |
+| F-1-2 | `?demo=1` now has the same isolated sample, persistent banner, Reset demo action, Demo title, and `/demo` canonical metadata as the catalog route. | `query demo mode has its own metadata and reset only replaces sample data` (desktop + 390px); local screenshots `/tmp/ept-local-verify/screenshot-desktop.png`, `/tmp/ept-local-verify/screenshot-mobile.png` |
+| F-1-3 | Reset was exercised after changing sample data; it returned only the demo database to Harbor Paper Co.’s sample. | `query demo mode has its own metadata and reset only replaces sample data` |
+| F-1-4, F-1-7–45 | Every command listed in `.factory/claims.json` was run from clean clone `/tmp/ept-claims-0Ipqf5/clone`; each passed in desktop and 390px Chromium. | `npm test -- --grep @claim:demo-isolation`, `payment-card`, `browser-privacy`, `exports`, `offline-reload`, `currencies`, and `receipt-validation` |
+| F-1-68 | Demo title and canonical/Open Graph/Twitter route metadata now switch before the app initializes, including direct `?demo=1`. | query-demo browser test; live `/demo` re-check recorded in handoff |
+| F-1-69, F-1-70 | Replaced the hidden phone navigation with a compact, wrapped header navigation; Calculator is visibly keyboard-operable at 390px. | `accessibility, title, focus, and mobile layout` at 390px; screenshot `/tmp/ept-local-verify/screenshot-mobile.png` |
+| Build retry | Promoted Vite to a runtime build dependency, so a production-style clean install no longer omits the configured builder. | `npm ci --omit=dev && npm run build` in `/tmp/ept-build-omit-RrpVGg/clone` passed and produced `dist/index.html` |
+
+The first clean full-suite retry exposed the hidden mobile Calculator link; it was fixed before the second clean run. The final clean suite at `/tmp/ept-suite-k5Ou7w/clone` passed: 7 unit tests and 18 Playwright tests.
