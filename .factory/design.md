@@ -38,6 +38,7 @@ Primary text contrast exceeds 13:1 on paper; inverse text is off-white on enamel
 - The workbench is a two-column control/readout layout on wide screens. At 900px it becomes a single flow with the result immediately after the inputs. At 390px, ornamental hardware disappears, controls remain at least 48px tall, and sticky chrome is avoided so the keyboard never traps the task.
 - A restrained 1px rule and proximity do most grouping. Raised cards are reserved for the two genuinely independent outputs: payment terms and paid-on-time receipt.
 - Corners are mostly 2–8px, not pill-shaped. Shadows mimic a paper slip or shallow metal recess.
+- Demo entry compresses the same enamel instrument into a first-screen four-field readout. It keeps the product identity while exposing the sample invoice, parties, deadline, and two payable amounts before any marketing scroll.
 
 ## Interaction grammar
 

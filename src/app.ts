@@ -96,6 +96,17 @@ function updateDocument(input: CalculationInput, result: CalculationResult): voi
   $('#card-version').textContent = 'Unsaved calculation · engine v1';
 }
 
+function updateDemoSummary(input: CalculationInput, result: CalculationResult): void {
+  if (!demoMode) return;
+  const values = document.querySelectorAll<HTMLElement>('.demo-summary strong');
+  const labels = document.querySelectorAll<HTMLElement>('.demo-summary span');
+  values[0].textContent = input.invoiceRef || 'Sample invoice';
+  values[1].textContent = `${input.supplierName || 'Sample supplier'} → ${input.customerName || 'Sample customer'}`;
+  labels[2].textContent = `Pay by ${humanDate(input.discountDate)}`;
+  values[2].textContent = formatMoney(result.earlyPayMinor, input.currency);
+  values[3].textContent = formatMoney(result.regularPayMinor, input.currency);
+}
+
 function roundingLabel(input: CalculationInput): string {
   if (input.rounding === 'cash-005') return 'to the nearest 0.05';
   if (input.rounding === 'whole') return 'to the nearest whole unit';
@@ -124,6 +135,7 @@ function renderCalculation(showErrors = false): boolean {
     $('#regular-amount').textContent = formatMoney(currentResult.regularPayMinor, currentInput.currency);
     $('#formula').textContent = `${currentResult.formula} Rounded ${roundingLabel(currentInput)}.`;
     updateDocument(currentInput, currentResult);
+    updateDemoSummary(currentInput, currentResult);
     return true;
   } catch (error) {
     currentResult = null; $('#empty-result').removeAttribute('hidden'); $('#calculation-result').setAttribute('hidden', '');
@@ -222,7 +234,15 @@ function openReceipt(): void {
 }
 
 async function initialize(): Promise<void> {
-  if (demoMode) $('#demo-banner').removeAttribute('hidden');
+  if (demoMode) {
+    $('#demo-banner').removeAttribute('hidden');
+    $('.demo-summary').removeAttribute('hidden');
+    $('#hero-title').textContent = 'Review sample early-payment invoice terms';
+    const action = $('#hero-demo-action') as HTMLAnchorElement;
+    action.href = '#payment-card-section';
+    action.innerHTML = 'View sample payment card <span aria-hidden="true">→</span>';
+    $('#hero-action-note').textContent = 'The populated calculator and saved version are below.';
+  }
   fillForm((await db.loadDraft().catch(() => undefined)) || (demoMode ? demoInput : emptyInput()));
   [historyRecords, templates] = await Promise.all([db.getHistory().catch(() => []), db.getTemplates().catch(() => [])]);
   if (demoMode && historyRecords.length === 0) {
@@ -357,11 +377,26 @@ function announceAndFocus(id: string): void {
   const live = document.getElementById('route-announcement'); if (live) live.textContent = heading.textContent || '';
 }
 
+function restoreFragment(): void {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (!id) return;
+  const section = document.getElementById(id);
+  const heading = section?.matches('h1,h2') ? section as HTMLElement : section?.querySelector<HTMLElement>('h1,h2');
+  if (!section || !heading?.id) return;
+  section.scrollIntoView({ block: 'start' });
+  announceAndFocus(heading.id);
+}
+
 document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => link.addEventListener('click', () => {
   const id = link.getAttribute('href')?.slice(1); const section = id ? document.getElementById(id) : null;
   const heading = section?.querySelector<HTMLElement>('h2,h1');
-  if (heading) window.setTimeout(() => announceAndFocus(heading.id), 250);
+  if (heading) window.setTimeout(() => { section?.scrollIntoView({ block: 'start' }); announceAndFocus(heading.id); }, 50);
 }));
+addEventListener('hashchange', () => window.setTimeout(restoreFragment, 0));
+addEventListener('popstate', () => { window.setTimeout(restoreFragment, 0); window.setTimeout(restoreFragment, 300); });
+addEventListener('pageshow', () => {
+  if (form.dataset.ready === 'true') { window.setTimeout(restoreFragment, 0); window.setTimeout(restoreFragment, 300); }
+});
 
 document.querySelector<HTMLButtonElement>('#reset-demo')?.addEventListener('click', async () => {
   await db.clearDemo(); location.href = '/demo';
@@ -370,4 +405,4 @@ document.querySelector<HTMLButtonElement>('#start-real')?.addEventListener('clic
   await db.clearDemo(); location.href = '/';
 });
 
-void initialize();
+void initialize().then(() => { window.setTimeout(restoreFragment, 0); window.setTimeout(restoreFragment, 300); });
