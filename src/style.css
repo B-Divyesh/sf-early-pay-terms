@@ -162,14 +162,14 @@ dialog { width: min(680px, calc(100% - 24px)); max-height: calc(100dvh - 24px); 
 @keyframes toast-in { from { transform: translateY(12px); opacity: 0; } }
 
 @media (max-width: 900px) {
-  .site-header { gap: 14px; }.site-header nav { display: none; }.network-status { margin-left: auto; }
+  .site-header { gap: 14px; }.site-header nav { gap: 18px; }.network-status { margin-left: auto; }
   .hero { min-height: 0; grid-template-columns: 1fr; padding-top: 72px; }.hero-art { width: min(720px, 100%); }
   .instrument-grid { grid-template-columns: 1fr; }.result-panel { position: relative; top: auto; order: 2; }
   .unlock, .data-tools { grid-template-columns: 1fr; }.data-actions { justify-content: flex-start; }
 }
 
 @media (max-width: 620px) {
-  body { font-size: 16px; }.site-header { min-height: 64px; padding-inline: 16px; }.brand svg { width: 30px; }.network-status span { position: absolute; width: 1px; height: 1px; clip: rect(0 0 0 0); overflow: hidden; }
+  body { font-size: 16px; }.site-header { min-height: 64px; flex-wrap: wrap; gap: 0 12px; padding: 8px 16px; }.brand svg { width: 30px; }.site-header nav { order: 3; flex: 0 0 100%; justify-content: space-between; gap: 0; margin-left: 0; font-size: 13px; }.network-status span { position: absolute; width: 1px; height: 1px; clip: rect(0 0 0 0); overflow: hidden; }
   .hero { padding: 54px 20px 74px; gap: 42px; }.hero::after { left: 20px; right: 20px; }.hero-art { transform: none; }.hero-art::before { display: none; }.hero-art img { border-width: 5px; }.hero-art figcaption { left: 8px; bottom: 8px; transform: none; }
   .workbench, .records, .document-section, .data-tools { padding: 60px 20px; }.section-heading { margin-bottom: 30px; }
   .field-row.two, .field-row.three { grid-template-columns: 1fr; gap: 12px; }.date-rail { display: none; }
