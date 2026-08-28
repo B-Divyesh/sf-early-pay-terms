@@ -30,7 +30,10 @@ AI was not added. The researched task is deterministic financial calculation, an
 - `tests/e2e/fixtures.ts` now gives each Playwright spec a new Chromium process, browser context, and page, then closes all three during fixture teardown. The suite runs one spec at a time with `CI=1`; it does not reuse a browser lifecycle across specs.
 - The tests no longer sleep for a debounced persistence guess. The app marks `#terms-form[data-draft-state="saved"]` only after IndexedDB resolves, and persistence tests wait for that observable state.
 - Chromium is explicitly 1440×900 and mobile is explicitly 390×844. Additional contexts inherit the project settings, so claim tests run at both declared viewports.
-- Local evidence before the final clean clone: `CI=1 npm test` passed TypeScript, 7/7 Vitest tests, the production build, and 42/42 Playwright tests. The final repeated clean-clone evidence and deployment check are appended after release.
+- Local evidence: `CI=1 npm test` passed TypeScript, 7/7 Vitest tests, the production build, and 42/42 Playwright tests.
+- Fresh-clone evidence: `/tmp/ept-polish2-retry1-aH4owc` was cloned from repair commit `674ba911b998710c0ae2f657ccc02744486b4680`, then ran `npm ci --include=dev`. All 17 exact commands listed in `.factory/claims.json` passed separately. `CI=1 npm run test:stable` then passed twice in succession: each run had TypeScript, 7/7 Vitest, `dist/index.html`, and 42/42 Playwright passing.
+- Claim audit: 17 claims, 17 tagged tests, and every ID appeared exactly once in `tests/e2e/app.spec.ts`.
+- Local route verifier: `/opt/fleet/lib/verify-url.sh` passed `/`, `/demo`, `/privacy/`, and `/terms/` against the clean build. Each had zero console errors, `lang=en`, one h1, a main landmark, and no missing image alt text or unlabeled buttons. Playwright axe remains zero-violation in both browser projects.
 
 ### Final clean clone
 
