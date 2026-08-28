@@ -1,0 +1,12 @@
+{
+  "slug": "early-pay-terms",
+  "title": "Early Pay Terms",
+  "territory": "utilities",
+  "user": "A tiny B2B supplier who offers an early-payment discount and needs each invoice to show the exact discounted amount, deadline, and remaining payable amount without ambiguous manual maths.",
+  "smallest_useful_product": "A local terms calculator and invoice attachment generator: choose discount basis, tax treatment, dates, and currency rounding; emit a clear payment card and paid-on-time receipt. Non-goals: issuing invoices, collecting payment, accounting entries, or legal/tax advice.",
+  "success_measure": "For 50 pilot invoices, the tool’s displayed amount equals the operator’s independently checked amount in 100% of cases and users report fewer payment clarification emails.",
+  "artifact_class": "pwa-offline",
+  "monetization": "one-time",
+  "constraints": "Regional VAT and discount rules vary; require the user to select and verify terms, version calculations, and clearly disclaim legal/accounting advice.",
+  "state": "RESEARCHED"
+}
