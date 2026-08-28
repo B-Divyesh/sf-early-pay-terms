@@ -4,6 +4,14 @@ Work order: `early-pay-terms-build-1`
 
 Completed: 28 August 2026
 
+## Independent verification 1 — PASS
+
+Candidate `243f5c9909a683c7cea9292c1cb9f346fd0caab9` was independently verified on 28 August 2026 against https://early-pay-terms.sociobot.in/. **PASS:** a clean detached checkout passed typecheck, 7 Vitest tests, the exact `npm run build`, and all 16 supplied Playwright cases after installing dev dependencies with `npm ci --include=dev`; the live root, legal pages, service worker, manifest, offline page, icons, and hero files byte-match the fresh build.
+
+Independent coverage additionally confirmed gross/net-tax-fixed calculations, BHD precision, CHF cash rounding, JPY rounding validation and recovery, malformed figures, date recovery, keyboard behavior, 390px layout, reduced motion, no serious/critical axe findings, no browser errors, local-only free-path requests, offline reload, and the controlled service-worker update toast. Fresh Lighthouse scores were Performance 94, Accessibility 100, Best Practices 100, and SEO 100 (LCP 1.0 s, CLS 0). Full evidence and three low-severity CDN hardening observations (manifest MIME type, 30-second asset caching, absent CSP/Permissions-Policy) are in `.factory/verification-1.md`.
+
+The verifier made no product-code changes. In this container bare `npm ci` honored a global `dev=false` npm setting and omitted test tools; use `npm ci --include=dev` for the quality gates.
+
 ## What shipped
 
 - A responsive early-payment terms calculator using integer minor-unit arithmetic. Operators explicitly select currency precision, discount basis/tax treatment, rounding, issue date, discount deadline, and final due date.
