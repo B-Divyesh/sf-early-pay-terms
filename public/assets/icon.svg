@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Early Pay Terms">
+  <rect width="512" height="512" rx="88" fill="#153c3b"/>
+  <rect x="92" y="82" width="328" height="348" rx="20" fill="#f5f0df" stroke="#b58a38" stroke-width="12"/>
+  <path d="M144 160h224M144 230h150M144 300h224" fill="none" stroke="#17211f" stroke-width="22" stroke-linecap="square"/>
+  <circle cx="340" cy="230" r="38" fill="#d95d39" stroke="#17211f" stroke-width="12"/>
+  <path d="M153 377h206" stroke="#b58a38" stroke-width="14" stroke-dasharray="4 20" stroke-linecap="round"/>
+</svg>
