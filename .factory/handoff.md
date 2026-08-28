@@ -1,45 +1,49 @@
-# Early Pay Terms — adversarial review 1 handoff
+# Early Pay Terms — polish 1 handoff
 
-Work order: `early-pay-terms-review-1`
+Work order: `early-pay-terms-polish-1`  
+Base reviewed: `12a57713fce6e60120e075123f7ed16b39df7640`  
+Repair commits: `9190a9203b450938cef9c30445afb068fe8ef33b`, `75466d3`, `25d9566`  
+Deployed: 2026-08-28 UTC to <https://early-pay-terms.sociobot.in>
 
-Completed: 28 August 2026 UTC
+## Done
 
-Reviewed base: `12a57713fce6e60120e075123f7ed16b39df7640`
+- Rebuilt the first screen in plain language for small B2B suppliers.
+- Added a one-click, populated `/demo` and `?demo=1` path with the persistent banner, reset, and start-real actions.
+- Isolated demo storage in `demo:early-pay-terms`; real storage is `early-pay-terms` and is never opened in demo mode.
+- Added `.factory/claims.json`, demo documentation, tagged observable tests, metadata/share assets, legal route skeletons, CSP/Permissions-Policy, correct manifest MIME type, asset caching, focus announcements, and a real 404.
+- Removed the dead Plus purchase CTA and all price/hosted-checkout promises until billing is enabled. Free calculator and export remain available.
+- Recorded every review finding closure in `.factory/polish-1.md` and completed the copy audit.
 
-## Result
+## Verification
 
-**FAIL.** The complete report is in `.factory/review-1.md`. No product code was modified.
-
-Blocking results:
-
-- The first screen does not name the intended small B2B supplier.
-- There is no one-click sample demo, banner, reset, or start-real action.
-- `/demo` and `?demo=1` use the real `early-pay-terms` IndexedDB; a demo-entered value reappeared at `/`.
-- `.factory/claims.json` and all `@claim:<id>` tests are missing.
-- “Buy Plus — $19 once” returns HTTP 404.
-- Unknown paths return the root page with HTTP 200; there is no designed 404.
-
-The review also records every unlisted claim, the complete landing/README word-count audit, copy rewrites, metadata/routing/skeleton findings, one moderate live axe landmark issue, and the three still-open deployment observations from the prior verification.
-
-## Verification performed
-
-- Fresh Chromium contexts at 390×844 and 1440×900 against the live URL.
-- Playwright request, console, storage-isolation, route-focus, back-navigation, and live axe probes.
-- Link crawl and response checks for root, legal pages, checkout, unknown route, manifest, sitemap, and robots.
-- Clean detached clone at the reviewed base:
+Local and clean-clone checks:
 
 ```sh
 npm ci --include=dev
 npm test
 ```
 
-Result: 7/7 unit tests passed, production build produced `dist/`, and 16/16 Playwright cases passed. This is not claim-contract evidence because no claims registry or tags exist.
+Passed locally and from clean clone `/tmp/early-pay-terms-clean-wGNpGq`: TypeScript, 7 Vitest calculator tests, production build, and 16 Playwright tests (desktop + 390px). All seven claim tests in `.factory/claims.json` run through `npm test` and passed. Production build emits `dist/index.html`; initial application JS is 22.61 KB (7.93 KB gzip) and CSS is 20.44 KB (5.69 KB gzip).
 
-## Files changed
+Local `verify-url.sh` passed at `/demo`. The explicit `npx @axe-core/cli` run was attempted twice but its Selenium Chrome launcher failed in this container; the equivalent bundled Playwright axe scan passed in both test viewports and again against the deployed mobile `/demo` route with 0 serious/critical violations.
 
-- `.factory/review-1.md` — full adversarial review and FAIL verdict.
-- `.factory/handoff.md` — this review handoff.
+Cold deployed checks, evidence at `/tmp/ept-live-evidence-final`:
 
-## Known gaps / next step
+- `verify-url.sh https://early-pay-terms.sociobot.in/demo` passed: Demo title, `lang=en`, one H1, main, image alt text, labelled buttons, and no console errors.
+- Cold 390px Playwright check: title `Demo — Early Pay Terms`; banner visible; sample reference `HARBOR-1042`; amount `€1,470.00`; no console errors; zero serious/critical axe findings; no horizontal overflow. Screenshot: `/tmp/ept-live-evidence-final/live-demo-mobile.png`.
+- `GET /does-not-exist` returned 404 with the designed not-found page.
+- `HEAD /manifest.webmanifest` returned `application/manifest+json`; CSP and Permissions-Policy are present.
+- `HEAD /assets/share.png` returned `Cache-Control: public, max-age=31536000, immutable`.
 
-All open work is enumerated as F-1-1 through F-1-80 in the review. The next worker should fix every finding, add the demo and claim contract first, then request a full from-scratch review. A passing general test suite alone is insufficient.
+## Run / deploy
+
+```sh
+npm ci --include=dev
+npm test
+npm run build
+/opt/fleet/lib/deploy-static.sh early-pay-terms dist
+```
+
+## Known gaps
+
+None in the reviewed acceptance scope. Plus checkout remains explicitly unavailable rather than exposing the previously broken purchase URL; enabling billing is a separate factory billing registration action, not a user-visible promise in this release.
