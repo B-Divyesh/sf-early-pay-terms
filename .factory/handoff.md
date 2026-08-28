@@ -3,7 +3,7 @@
 Work order: `early-pay-terms-polish-1-retry1`
 Base reviewed: `12a57713fce6e60120e075123f7ed16b39df7640`  
 Repair commits: `9190a9203b450938cef9c30445afb068fe8ef33b`, `75466d3`, `25d9566`, `58056f5`, `d1c1e23`
-Deployment: pending final upload in this work order.
+Deployed: 2026-08-28 UTC to <https://early-pay-terms.sociobot.in> (deployment `01299ad2-f1ac-43b4-a1a6-c1e420b188e9`)
 
 ## Done
 
@@ -29,10 +29,10 @@ Passed from clean clone `/tmp/ept-suite-k5Ou7w/clone`: TypeScript, 7 Vitest calc
 
 Local `verify-url.sh` passed at `/demo`: `/tmp/ept-local-verify/verify.json` records title, lang, main, image alt text, labelled buttons, and no browser errors. Screenshots are `/tmp/ept-local-verify/screenshot-desktop.png` and `/tmp/ept-local-verify/screenshot-mobile.png`. `npx @axe-core/cli@4.10.2` could not start Selenium Chrome because this container has only Playwright’s Chromium path; the bundled Playwright axe scan passed in both viewports with 0 serious/critical findings.
 
-Final cold deployed checks will be appended below after this work order uploads the final commit.
+Cold deployed checks, evidence in `/tmp/ept-live-retry1`:
 
-- `verify-url.sh https://early-pay-terms.sociobot.in/demo` passed: Demo title, `lang=en`, one H1, main, image alt text, labelled buttons, and no console errors.
-- Cold 390px Playwright check: title `Demo — Early Pay Terms`; banner visible; sample reference `HARBOR-1042`; amount `€1,470.00`; no console errors; zero serious/critical axe findings; no horizontal overflow. Screenshot: `/tmp/ept-live-evidence-final/live-demo-mobile.png`.
+- `verify-url.sh https://early-pay-terms.sociobot.in/demo` passed: Demo title, `lang=en`, one H1, main, image alt text, labelled buttons, and no console errors. It wrote desktop/mobile screenshots and `verify.json`.
+- Cold 390px Playwright check at `/?demo=1`: title `Demo — Early Pay Terms`; canonical `https://early-pay-terms.sociobot.in/demo`; banner visible; sample reference `HARBOR-1042`; amount `€1,470.00`; no console errors; no horizontal overflow. Screenshot: `/tmp/ept-live-retry1/live-demo-query-mobile.png`.
 - `GET /does-not-exist` returned 404 with the designed not-found page.
 - `HEAD /manifest.webmanifest` returned `application/manifest+json`; CSP and Permissions-Policy are present.
 - `HEAD /assets/share.png` returned `Cache-Control: public, max-age=31536000, immutable`.
