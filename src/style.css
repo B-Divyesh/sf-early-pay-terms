@@ -151,6 +151,7 @@ details[open] summary { margin-bottom: 12px; }
 .is-unlocked .license-panel { border-color: #9fd4af; }.is-unlocked .license-panel .status-lamp { background: #9fd4af; }
 
 .data-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }.data-actions { justify-content: flex-end; margin: 0; }.file-button { position: relative; }.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }.danger { color: var(--danger); }
+.file-button:has(input:focus-visible) { outline: 3px solid var(--brass); outline-offset: 3px; box-shadow: 0 0 0 2px var(--ink); }
 .caution { display: flex; gap: 20px; align-items: flex-start; padding: 32px max(24px, calc((100vw - 1160px) / 2)); background: #ead9b7; border-block: 1px solid #97733b; }.caution > span { flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border: 2px solid; border-radius: 50%; font: 800 24px var(--sans); }.caution h2 { font-size: 22px; }.caution p { max-width: 900px; margin-bottom: 0; color: #423c31; }
 .site-footer { padding: 48px max(24px, calc((100vw - 1160px) / 2)); background: var(--enamel-deep); color: #e5e8df; }.site-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; }.site-footer nav { display: flex; gap: 22px; justify-content: flex-end; }.site-footer small { grid-column: 1 / -1; color: #aab8b0; }
 

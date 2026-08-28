@@ -138,7 +138,7 @@
           <header><div><p>Early-payment terms</p><h3 id="card-invoice">Invoice</h3></div><span class="document-mark">EPT / 01</span></header>
           <div class="document-parties"><p id="card-supplier"></p><p id="card-customer"></p></div>
           <div class="document-deal"><p>Pay exactly</p><strong id="card-early-amount"></strong><p>Funds must be received by <b id="card-discount-date"></b></p></div>
-          <dl><div><dt>Original invoice total</dt><dd id="card-total"></dd></div><div><dt>Early-payment discount</dt><dd id="card-discount"></dd></div><div><dt>Amount due after deadline</dt><dd id="card-regular"></dd></div><div><dt>Final due date</dt><dd id="card-due-date"></dd></div></dl>
+          <dl><div><dt>Net amount entered</dt><dd id="card-net"></dd></div><div><dt>Tax amount entered</dt><dd id="card-tax"></dd></div><div><dt>Original invoice total</dt><dd id="card-total"></dd></div><div><dt>Early-payment discount</dt><dd id="card-discount"></dd></div><div><dt>Amount due after deadline</dt><dd id="card-regular"></dd></div><div><dt>Final due date</dt><dd id="card-due-date"></dd></div></dl>
           <p id="card-note" class="card-note"></p><p id="card-method" class="fine-print"></p>
           <footer><span id="card-version">Calculation not saved</span><span>Prepared with Early Pay Terms</span></footer>
         </article>
@@ -160,7 +160,7 @@
         <div class="license-panel">
           <p id="license-state"><span class="status-lamp"></span> Free calculator active</p>
           <a class="button primary" id="buy-link" href="https://api.sociobot.in/api/v1/products/early-pay-terms/checkout">Buy Plus — $19 once</a>
-          <details><summary>Have a license? Restore it</summary><form id="license-form"><label>License token<input id="license-input" autocomplete="off" spellcheck="false" required></label><button class="button secondary" type="submit">Verify license</button></form></details>
+          <details><summary>Have a license? Restore it</summary><form id="license-form"><label>License token<input id="license-input" autocomplete="off" spellcheck="false" required></label><button class="button secondary" type="submit" aria-label="Verify license">Verify license</button></form></details>
           <p class="fine-print">Secure checkout and refunds are handled by Sociobot, the merchant of record. <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a></p>
         </div>
       </section>
@@ -175,10 +175,10 @@
     <dialog id="receipt-dialog" aria-labelledby="receipt-title">
       <form method="dialog" class="dialog-close"><button aria-label="Close receipt dialog">×</button></form>
       <div id="receipt-form-view"><p class="eyebrow">Paid-on-time receipt</p><h2 id="receipt-title">Record the payment received</h2><p>This receipt is for a full discounted payment received by the deadline. Partial or late payments need manual review.</p><form id="receipt-form"><label>Payment date<input id="payment-date" type="date" required></label><label>Amount received<input id="payment-amount" inputmode="decimal" required></label><div id="receipt-error" class="form-error" role="alert" hidden></div><button class="button primary" type="submit">Create receipt</button></form></div>
-      <article class="paper-document receipt" id="receipt-document" hidden><header><div><p>Payment receipt</p><h3 id="receipt-invoice"></h3></div><span class="paid-stamp">Paid on time</span></header><div class="document-deal"><p>Payment received</p><strong id="receipt-paid"></strong><p>on <b id="receipt-date"></b></p></div><dl><div><dt>Early-payment discount</dt><dd id="receipt-discount"></dd></div><div><dt>Remaining payable</dt><dd id="receipt-remaining"></dd></div></dl><p class="fine-print">This receipt records the figures entered by the supplier. It is not proof of bank settlement or tax advice.</p><footer><span id="receipt-version"></span><span>Early Pay Terms</span></footer><button class="button primary print-hide" type="button" id="print-receipt">Print receipt</button></article>
+      <article class="paper-document receipt" id="receipt-document" hidden><header><div><p>Payment receipt</p><h3 id="receipt-invoice"></h3></div><span class="paid-stamp">Paid on time</span></header><div class="document-parties"><p id="receipt-supplier"></p><p id="receipt-customer"></p></div><div class="document-deal"><p>Payment received</p><strong id="receipt-paid"></strong><p>on <b id="receipt-date"></b></p></div><dl><div><dt>Early-payment discount</dt><dd id="receipt-discount"></dd></div><div><dt>Remaining payable</dt><dd id="receipt-remaining"></dd></div></dl><p class="fine-print">This receipt records the figures entered by the supplier. It is not proof of bank settlement or tax advice.</p><footer><span id="receipt-version"></span><span>Early Pay Terms</span></footer><button class="button primary print-hide" type="button" id="print-receipt">Print receipt</button></article>
     </dialog>
 
-    <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-text"></span><button id="toast-action" type="button" hidden></button></div>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-text"></span><button id="toast-action" type="button" aria-label="Notification action" hidden></button></div>
     <script type="module" src="/src/app.ts"></script>
   </body>
 </html>

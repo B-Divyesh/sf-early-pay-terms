@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculate, CalculationError, formatMoney, parseMinor } from '../src/calculator';
+import { calculate, CalculationError, formatMoney, minorToDecimal, parseMinor } from '../src/calculator';
 import { emptyInput, type CalculationInput } from '../src/types';
 
 const makeInput = (overrides: Partial<CalculationInput> = {}): CalculationInput => ({
@@ -51,5 +51,7 @@ describe('early-payment calculation', () => {
     const result = calculate(makeInput({ netAmount: '999999999999.99', taxAmount: '0.01', discountPercent: '1.125' }));
     expect(result.discountMinor).toBe(1125000000000n);
     expect(result.invoiceMinor - result.discountMinor).toBe(result.earlyPayMinor);
+    expect(formatMoney(result.invoiceMinor, 'EUR')).toContain('1,000,000,000,000.00');
+    expect(minorToDecimal(result.earlyPayMinor, 2)).toBe('988750000000.00');
   });
 });

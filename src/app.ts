@@ -1,5 +1,5 @@
 import './style.css';
-import { calculate, CalculationError, formatMoney, parseMinor, serializeResult } from './calculator';
+import { calculate, CalculationError, formatMoney, minorToDecimal, parseMinor, serializeResult } from './calculator';
 import { db } from './db';
 import { captureReturnedLicense, checkoutUrl, isOptimisticallyUnlocked, storedToken, verifyLicense } from './license';
 import { CURRENCIES, emptyInput, type CalculationInput, type CalculationResult, type DiscountMethod, type RoundingMode, type SavedCalculation, type SavedTemplate } from './types';
@@ -80,11 +80,14 @@ function updateDocument(input: CalculationInput, result: CalculationResult): voi
   $('#card-early-amount').textContent = formatMoney(result.earlyPayMinor, input.currency);
   $('#card-discount-date').textContent = humanDate(input.discountDate);
   $('#card-total').textContent = formatMoney(result.invoiceMinor, input.currency);
+  $('#card-net').textContent = formatMoney(result.netMinor, input.currency);
+  $('#card-tax').textContent = formatMoney(result.taxMinor, input.currency);
   $('#card-discount').textContent = `−${formatMoney(result.discountMinor, input.currency)} (${input.discountPercent}%)`;
   $('#card-regular').textContent = formatMoney(result.regularPayMinor, input.currency);
   $('#card-due-date').textContent = humanDate(input.dueDate);
   const note = $('#card-note'); note.textContent = input.note; note.toggleAttribute('hidden', !input.note);
   $('#card-method').textContent = `${result.formula} Discount rounded ${roundingLabel(input)}. Full discounted amount must be received by the deadline. Verify regional tax treatment before sending.`;
+  $('#card-version').textContent = 'Unsaved calculation · engine v1';
 }
 
 function roundingLabel(input: CalculationInput): string {
@@ -206,7 +209,7 @@ function openReceipt(): void {
   if (!requirePlus() || !renderCalculation(true) || !currentResult) return;
   const dialog = $('#receipt-dialog') as HTMLDialogElement;
   ($('#payment-date') as HTMLInputElement).value = currentInput.discountDate;
-  ($('#payment-amount') as HTMLInputElement).value = (Number(currentResult.earlyPayMinor) / 10 ** CURRENCIES[currentInput.currency].digits).toFixed(CURRENCIES[currentInput.currency].digits);
+  ($('#payment-amount') as HTMLInputElement).value = minorToDecimal(currentResult.earlyPayMinor, CURRENCIES[currentInput.currency].digits);
   $('#receipt-form-view').removeAttribute('hidden'); $('#receipt-document').setAttribute('hidden', '');
   dialog.showModal(); window.setTimeout(() => ($('#payment-date') as HTMLInputElement).focus(), 0);
 }
@@ -252,7 +255,7 @@ $('#save-template').addEventListener('click', async () => {
 $('#history-list').addEventListener('click', async (event) => {
   const button = (event.target as Element).closest<HTMLButtonElement>('button'); const article = button?.closest<HTMLElement>('article');
   if (!button || !article) return; const record = historyRecords.find((item) => item.id === article.dataset.id); if (!record) return;
-  if (button.dataset.action === 'restore') { fillForm(record.input); renderCalculation(true); $('#workbench').scrollIntoView(); showToast(`Restored version ${record.version}. Saving again will create a new version.`); }
+  if (button.dataset.action === 'restore') { fillForm(record.input); renderCalculation(true); $('#card-version').textContent = `Restored v${record.version} · ${new Date(record.createdAt).toLocaleString()}`; $('#workbench').scrollIntoView(); showToast(`Restored version ${record.version}. Saving again will create a new version.`); }
   if (button.dataset.action === 'delete') {
     await db.deleteHistory(record.id); historyRecords = historyRecords.filter((item) => item.id !== record.id); deletedRecord = record; renderHistory(); clearTimeout(undoTimer);
     showToast(`Deleted version ${record.version}.`, { label: 'Undo', run: () => { if (!deletedRecord) return; void db.saveHistory(deletedRecord); historyRecords.push(deletedRecord); deletedRecord = null; renderHistory(); } });
@@ -276,6 +279,8 @@ $('#receipt-form').addEventListener('submit', (event) => {
     if (amount !== currentResult.earlyPayMinor) throw new CalculationError(`The received amount must exactly match the early-payment amount of ${formatMoney(currentResult.earlyPayMinor, currentInput.currency)}. Review partial payments or overpayments manually.`);
     error.setAttribute('hidden', '');
     $('#receipt-invoice').textContent = currentInput.invoiceRef ? `Invoice ${currentInput.invoiceRef}` : 'Invoice payment';
+    $('#receipt-supplier').textContent = currentInput.supplierName ? `From ${currentInput.supplierName}` : '';
+    $('#receipt-customer').textContent = currentInput.customerName ? `For ${currentInput.customerName}` : '';
     $('#receipt-paid').textContent = formatMoney(amount, currentInput.currency); $('#receipt-date').textContent = humanDate(date);
     $('#receipt-discount').textContent = formatMoney(currentResult.discountMinor, currentInput.currency); $('#receipt-remaining').textContent = formatMoney(0n, currentInput.currency);
     $('#receipt-version').textContent = $('#card-version').textContent || 'Current calculation';

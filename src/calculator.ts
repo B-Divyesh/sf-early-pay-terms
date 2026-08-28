@@ -97,11 +97,21 @@ export function calculate(input: CalculationInput): CalculationResult {
 
 export function formatMoney(minor: bigint, currency: CalculationInput['currency']): string {
   const meta = CURRENCIES[currency];
-  const value = Number(minor) / 10 ** meta.digits;
-  return new Intl.NumberFormat(meta.locale, {
+  const scale = 10n ** BigInt(meta.digits);
+  const whole = minor / scale;
+  const fraction = (minor % scale).toString().padStart(meta.digits, '0');
+  const parts = new Intl.NumberFormat(meta.locale, {
     style: 'currency', currency, minimumFractionDigits: meta.digits,
     maximumFractionDigits: meta.digits
-  }).format(value);
+  }).formatToParts(whole);
+  return parts.map((part) => part.type === 'fraction' ? fraction : part.value).join('');
+}
+
+export function minorToDecimal(minor: bigint, digits: number): string {
+  const scale = 10n ** BigInt(digits);
+  const whole = minor / scale;
+  if (digits === 0) return whole.toString();
+  return `${whole}.${(minor % scale).toString().padStart(digits, '0')}`;
 }
 
 export function serializeResult(result: CalculationResult): SavedResult {

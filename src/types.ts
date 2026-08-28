@@ -60,9 +60,11 @@ export interface SavedTemplate {
 export const emptyInput = (): CalculationInput => {
   const today = new Date();
   const plus = (days: number) => {
-    const date = new Date(today);
-    date.setUTCDate(date.getUTCDate() + days);
-    return date.toISOString().slice(0, 10);
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + days);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
   return {
     invoiceRef: '', supplierName: '', customerName: '', currency: 'EUR',

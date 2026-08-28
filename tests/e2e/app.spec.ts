@@ -81,6 +81,28 @@ test('refuses an ambiguous paid-on-time receipt amount', async ({ page }) => {
   await expect(page.locator('#receipt-document')).toBeHidden();
 });
 
+test('stores a returned license, removes it from the URL, and verifies it', async ({ page }) => {
+  await page.route('https://pilot-api.sociobot.in/api/v1/products/early-pay-terms/verify**', async (route) => {
+    await route.fulfill({ json: { valid: true, reason: 'ok', expires_at: null } });
+  });
+  await page.goto('/?license=returned-test-token');
+  await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await expect(page).toHaveURL('http://127.0.0.1:4173/');
+  await expect(page.locator('#license-state')).toContainText('Plus is active');
+  expect(await page.evaluate(() => localStorage.getItem('sb_license:early-pay-terms'))).toBe('returned-test-token');
+});
+
+test('announces invalid date order with a useful correction', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await page.getByLabel('Net amount').fill('100.00');
+  await page.getByLabel('Discount deadline').fill('2026-01-10');
+  await page.getByLabel('Issued').fill('2026-01-11');
+  await page.getByRole('button', { name: 'Review exact terms' }).click();
+  await expect(page.locator('#form-error')).toContainText('cannot be before the issue date');
+  await expect(page.locator('#form-error')).toHaveAttribute('role', 'alert');
+});
+
 test('legal pages have the required landmarks', async ({ page }) => {
   for (const path of ['/privacy/', '/terms/']) {
     await page.goto(path);

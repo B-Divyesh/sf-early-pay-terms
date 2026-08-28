@@ -70,7 +70,7 @@ The hero illustration is a generated still-life of a fictional desktop payment c
 - **Negative list:** no people, hands, currency symbols, legible writing, logos, brands, gradients, neon, glassmorphism, watermark, or fake app UI
 - **Required literal constraint:** no text, no watermark, no logos
 
-Generation command: `/opt/fleet/lib/gen-image.sh "<prompt derived from the prompt sheet>" assets/src/terms-instrument-candidate-N.png 1536x1024 high` using the factory Azure image deployment. Candidates are visually reviewed for malformed controls, accidental text/branding, seams, and palette fit. The selected original is exported to responsive WebP assets with a mobile hero below 300 KB. Generated on 2026-08-28; original work commissioned for this product under the project license. The footer discloses that the scene is AI-generated.
+Generation command: `/opt/fleet/lib/gen-image.sh "<prompt derived from the prompt sheet>" assets/src/terms-instrument-candidate-N.png 1536x1024 high` using the factory Azure image deployment. Both candidates were visually reviewed for malformed controls, accidental text/branding, seams, and palette fit. Candidate 2 was selected for its clean, text-free faceplate and clear three-stage relationship; it is exported as 640px (18 KB) and 960px (42 KB) WebP assets, comfortably below the 300 KB mobile budget. Generated on 2026-08-28; original work commissioned for this product under the project license. Prompt sidecars are retained beside both source images. The footer discloses that the scene is AI-generated.
 
 ## Print language
 
