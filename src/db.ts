@@ -1,6 +1,9 @@
 import type { CalculationInput, SavedCalculation, SavedTemplate } from './types';
 
-const DB_NAME = 'early-pay-terms';
+// The demo deliberately has a physically separate IndexedDB database.  Do not
+// fold this into a key prefix: opening the demo must never even read a real
+// customer's database.
+const DB_NAME = document.documentElement.dataset.demo === 'true' ? 'demo:early-pay-terms' : 'early-pay-terms';
 const DB_VERSION = 1;
 
 function openDb(): Promise<IDBDatabase> {
@@ -42,5 +45,14 @@ export const db = {
     const tx = database.transaction(['state', 'history', 'templates'], 'readwrite');
     tx.objectStore('state').clear(); tx.objectStore('history').clear(); tx.objectStore('templates').clear();
     return new Promise<void>((resolve, reject) => { tx.oncomplete = () => { database.close(); resolve(); }; tx.onerror = () => reject(tx.error); });
+  },
+  clearDemo: async () => {
+    if (DB_NAME !== 'demo:early-pay-terms') return;
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Close other demo tabs, then reset the demo again.'));
+    });
   }
 };

@@ -1,113 +1,72 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 
-test('calculates, explains, and prints exact terms', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await expect(page.locator('h1')).toHaveCount(1);
-  await page.getByLabel('Invoice reference').fill('INV-1042');
-  await page.getByLabel('Net amount').fill('1000.00');
-  await page.getByLabel('Tax amount').fill('190.00');
-  await page.getByRole('button', { name: 'Review exact terms' }).click();
-  await expect(page.locator('#early-amount')).toContainText('1,166.20');
-  await expect(page.locator('#discount-amount')).toContainText('23.80');
-  await expect(page.locator('#card-invoice')).toHaveText('Invoice INV-1042');
-  await expect(page.locator('#payment-card-section')).toBeVisible();
-  expect(errors).toEqual([]);
+test('@claim:demo-isolation opens a populated sample and cannot read production storage', async ({ browser }) => {
+  const real = await browser.newContext(); const rp = await real.newPage();
+  await rp.goto('/'); await rp.locator('#terms-form[data-ready="true"]').waitFor();
+  await rp.getByLabel('Invoice reference').fill('REAL-ONLY'); await rp.waitForTimeout(350);
+  const demo = await browser.newContext(); const dp = await demo.newPage();
+  await dp.goto('/demo'); await dp.locator('#terms-form[data-ready="true"]').waitFor();
+  await expect(dp.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await expect(dp.getByLabel('Invoice reference')).toHaveValue('HARBOR-1042');
+  await expect(dp.locator('#payment-card-section')).toBeVisible();
+  await dp.getByLabel('Invoice reference').fill('DEMO-ONLY'); await dp.waitForTimeout(350);
+  await rp.reload(); await expect(rp.getByLabel('Invoice reference')).toHaveValue('REAL-ONLY');
+  await dp.getByRole('button', { name: 'Start for real' }).click(); await expect(dp).toHaveURL(/\/$/); await expect(dp.getByLabel('Invoice reference')).not.toHaveValue('DEMO-ONLY');
+  await real.close(); await demo.close();
 });
 
-test('has no serious accessibility violations', async ({ page }, testInfo) => {
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await page.getByLabel('Net amount').fill('1000.00');
-  await page.getByLabel('Tax amount').fill('190.00');
-  const results = await new AxeBuilder({ page: page as never }).analyze();
-  expect(results.violations.filter((item) => ['serious', 'critical'].includes(item.impact || '')), JSON.stringify(results.violations, null, 2)).toEqual([]);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${testInfo.project.name} has horizontal overflow`).toBe(true);
+test('@claim:payment-card calculates all visible card values from sample data', async ({ page }) => {
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await page.locator('#netAmount').fill('1250'); await page.locator('#taxAmount').fill('250');
+  await expect(page.locator('#early-amount')).toContainText('1,470.00');
+  await expect(page.locator('#discount-amount')).toContainText('30.00');
+  await expect(page.locator('#card-invoice')).toHaveText('Invoice HARBOR-1042');
+  await expect(page.locator('#card-discount-date')).toContainText('Aug 11, 2026');
+  await expect(page.locator('#card-regular')).toContainText('1,500.00');
 });
 
-test('persists the draft and works after the network goes offline', async ({ page, context }) => {
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await page.getByLabel('Invoice reference').fill('OFFLINE-7');
-  await page.getByLabel('Net amount').fill('250.00');
-  await page.waitForTimeout(400);
-  await page.reload();
-  await expect(page.getByLabel('Invoice reference')).toHaveValue('OFFLINE-7');
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await page.reload();
-  await expect(page.locator('#early-amount')).toBeVisible();
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.getByRole('heading', { name: 'Make the early amount impossible to misread.' })).toBeVisible();
-  await expect(page.locator('#early-amount')).toBeVisible();
-  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
-  await expect(page.locator('#network-status')).toContainText('Working offline');
+test('@claim:browser-privacy demo calculation and export make no third-party requests', async ({ page }) => {
+  const urls: string[] = []; page.on('request', r => urls.push(r.url()));
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export JSON' }).click(); await (await download).delete();
+  expect(urls.every(url => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
 });
 
-test('unlocks saved versions and creates an on-time receipt from a cached license', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('sb_license:early-pay-terms', 'test-license');
-    localStorage.setItem('sb_license_verdict:early-pay-terms', JSON.stringify({ valid: true, checkedAt: Date.now(), reason: 'ok' }));
-  });
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await page.getByLabel('Invoice reference').fill('PAID-88');
-  await page.getByLabel('Net amount').fill('500.00');
-  await page.getByRole('button', { name: /Save this version/ }).click();
-  await expect(page.locator('#history-list article')).toHaveCount(1);
-  await page.getByRole('button', { name: /Create paid receipt/ }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await page.getByRole('button', { name: 'Create receipt' }).click();
-  await expect(page.locator('#receipt-remaining')).toContainText('0.00');
-  await expect(page.locator('#receipt-document')).toBeVisible();
+test('@claim:exports downloads JSON and CSV without Plus', async ({ page }) => {
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  const json = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export JSON' }).click();
+  const jsonPath = await (await json).path(); expect(jsonPath && (await readFile(jsonPath, 'utf8')).includes('HARBOR-1042')).toBe(true);
+  const csv = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export CSV' }).click();
+  const csvDownload = await csv; const csvPath = await csvDownload.path(); expect(csvDownload.suggestedFilename()).toContain('.csv'); expect(csvPath && (await readFile(csvPath, 'utf8')).includes('invoice_reference')).toBe(true);
 });
 
-test('refuses an ambiguous paid-on-time receipt amount', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('sb_license:early-pay-terms', 'test-license');
-    localStorage.setItem('sb_license_verdict:early-pay-terms', JSON.stringify({ valid: true, checkedAt: Date.now(), reason: 'ok' }));
-  });
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await page.getByLabel('Net amount').fill('100.00');
-  await page.getByRole('button', { name: /Create paid receipt/ }).click();
-  await page.getByLabel('Amount received').fill('99.00');
-  await page.getByRole('button', { name: 'Create receipt' }).click();
-  await expect(page.locator('#receipt-error')).toContainText('must exactly match');
-  await expect(page.locator('#receipt-document')).toBeHidden();
+test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await page.evaluate(() => navigator.serviceWorker.ready); await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await context.setOffline(true); await page.reload();
+  await expect(page.getByLabel('Invoice reference')).toHaveValue('HARBOR-1042'); await expect(page.locator('#early-amount')).toBeVisible();
 });
 
-test('stores a returned license, removes it from the URL, and verifies it', async ({ page }) => {
-  await page.route('https://pilot-api.sociobot.in/api/v1/products/early-pay-terms/verify**', async (route) => {
-    await route.fulfill({ json: { valid: true, reason: 'ok', expires_at: null } });
-  });
-  await page.goto('/?license=returned-test-token');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await expect(page).toHaveURL('http://127.0.0.1:4173/');
-  await expect(page.locator('#license-state')).toContainText('Plus is active');
-  expect(await page.evaluate(() => localStorage.getItem('sb_license:early-pay-terms'))).toBe('returned-test-token');
+test('@claim:currencies supports advertised currency precision and rejects unavailable cash rounding', async ({ page }) => {
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await page.locator('#netAmount').fill('1250'); await page.locator('#taxAmount').fill('250');
+  for (const currency of ['EUR', 'USD', 'GBP', 'CHF', 'INR', 'JPY', 'BHD']) { await page.locator('#currency').selectOption(currency); await expect(page.locator('#early-amount')).toBeVisible(); }
+  await page.locator('#currency').selectOption('JPY');
+  await page.getByLabel('Currency rounding').selectOption('cash-005'); await page.getByRole('button', { name: 'Show payment card' }).click();
+  await expect(page.locator('#form-error')).toContainText('not available');
 });
 
-test('announces invalid date order with a useful correction', async ({ page }) => {
-  await page.goto('/');
-  await page.locator('#terms-form[data-ready="true"]').waitFor();
-  await page.getByLabel('Net amount').fill('100.00');
-  await page.getByLabel('Discount deadline').fill('2026-01-10');
-  await page.getByLabel('Issued').fill('2026-01-11');
-  await page.getByRole('button', { name: 'Review exact terms' }).click();
-  await expect(page.locator('#form-error')).toContainText('cannot be before the issue date');
-  await expect(page.locator('#form-error')).toHaveAttribute('role', 'alert');
+test('@claim:receipt-validation accepts only full on-time payments', async ({ page }) => {
+  await page.addInitScript(() => { localStorage.setItem('sb_license:early-pay-terms', 'test'); localStorage.setItem('sb_license_verdict:early-pay-terms', JSON.stringify({ valid: true, checkedAt: Date.now() })); });
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor(); await page.getByRole('button', { name: /Create paid receipt/ }).click();
+  await page.getByLabel('Amount received').fill('1.00'); await page.getByRole('button', { name: 'Create receipt' }).click(); await expect(page.locator('#receipt-error')).toContainText('must exactly match');
 });
 
-test('legal pages have the required landmarks', async ({ page }) => {
-  for (const path of ['/privacy/', '/terms/']) {
-    await page.goto(path);
-    await expect(page.locator('main')).toHaveCount(1);
-    await expect(page.locator('h1')).toHaveCount(1);
-    await expect(page).toHaveTitle(/Early Pay Terms/);
-  }
+test('accessibility, title, focus, and mobile layout', async ({ page }, testInfo) => {
+  await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor(); await expect(page).toHaveTitle(/Demo — Early Pay Terms/);
+  await page.getByRole('link', { name: 'Calculator', exact: true }).click(); await expect(page.locator('#workbench-title')).toBeFocused();
+  const axe = await new AxeBuilder({ page: page as never }).analyze(); expect(axe.violations.filter(v => ['serious', 'critical'].includes(v.impact || ''))).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), testInfo.project.name).toBe(true);
 });

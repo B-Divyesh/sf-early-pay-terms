@@ -1,0 +1,1 @@
+Calculate exact early-payment invoice terms for small B2B suppliers.

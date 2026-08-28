@@ -5,6 +5,12 @@ import { captureReturnedLicense, checkoutUrl, isOptimisticallyUnlocked, storedTo
 import { CURRENCIES, emptyInput, type CalculationInput, type CalculationResult, type DiscountMethod, type RoundingMode, type SavedCalculation, type SavedTemplate } from './types';
 
 const $ = <T extends Element>(selector: string) => document.querySelector<T>(selector)!;
+const demoMode = document.documentElement.dataset.demo === 'true';
+const demoInput: CalculationInput = {
+  invoiceRef: 'HARBOR-1042', supplierName: 'Harbor Paper Co.', customerName: 'Moss & Field Studio', currency: 'EUR',
+  netAmount: '1250.00', taxAmount: '250.00', discountPercent: '2', method: 'gross', rounding: 'currency',
+  issueDate: '2026-08-01', discountDate: '2026-08-11', dueDate: '2026-08-31', note: 'Include invoice HARBOR-1042 with your transfer.'
+};
 const form = $('#terms-form') as HTMLFormElement;
 form.inert = true;
 form.setAttribute('aria-busy', 'true');
@@ -99,7 +105,7 @@ function roundingLabel(input: CalculationInput): string {
 function renderCalculation(showErrors = false): boolean {
   currentInput = readInput();
   clearTimeout(draftTimer);
-  draftTimer = window.setTimeout(() => db.saveDraft(currentInput).catch(() => showToast('Draft could not be saved on this device.')), 250);
+  draftTimer = window.setTimeout(() => db.saveDraft(currentInput).catch(() => showToast('Your browser blocked local storage. Export JSON now or allow site storage, then try again.')), 250);
   if (!currentInput.netAmount.trim()) {
     currentResult = null; $('#empty-result').removeAttribute('hidden'); $('#calculation-result').setAttribute('hidden', '');
     $('#payment-card-section').setAttribute('hidden', ''); setError(''); return false;
@@ -139,7 +145,8 @@ function updateLicenseUI(message?: string): void {
   const state = $('#license-state');
   state.innerHTML = unlocked ? '<span class="status-lamp"></span> Plus is active on this device' : '<span class="status-lamp"></span> Free calculator active';
   if (message) showToast(message);
-  $('#unlock-nav').textContent = unlocked ? 'Plus active' : 'Unlock';
+  const unlockNav = document.querySelector<HTMLElement>('#unlock-nav');
+  if (unlockNav) unlockNav.textContent = unlocked ? 'Plus active' : 'Unlock';
 }
 
 async function saveVersion(): Promise<void> {
@@ -215,8 +222,14 @@ function openReceipt(): void {
 }
 
 async function initialize(): Promise<void> {
-  fillForm((await db.loadDraft().catch(() => undefined)) || emptyInput());
+  if (demoMode) $('#demo-banner').removeAttribute('hidden');
+  fillForm((await db.loadDraft().catch(() => undefined)) || (demoMode ? demoInput : emptyInput()));
   [historyRecords, templates] = await Promise.all([db.getHistory().catch(() => []), db.getTemplates().catch(() => [])]);
+  if (demoMode && historyRecords.length === 0) {
+    const sampleResult = calculate(demoInput);
+    const sample: SavedCalculation = { id: 'demo-harbor-v1', version: 1, createdAt: '2026-08-01T09:00:00.000Z', input: demoInput, result: serializeResult(sampleResult) };
+    await db.saveHistory(sample); historyRecords = [sample];
+  }
   renderCalculation(); renderHistory(); renderTemplates(); updateLicenseUI();
 
   const returned = captureReturnedLicense();
@@ -226,7 +239,8 @@ async function initialize(): Promise<void> {
     }).catch((error: Error) => showToast(error.message));
   }
 
-  const buy = $('#buy-link') as HTMLAnchorElement; buy.href = checkoutUrl();
+  const buy = $('#buy-link') as HTMLAnchorElement | null;
+  if (buy) buy.href = checkoutUrl();
   setupServiceWorker(); updateNetworkStatus();
   form.inert = false;
   form.removeAttribute('aria-busy');
@@ -237,7 +251,7 @@ form.addEventListener('input', () => renderCalculation(false));
 form.addEventListener('change', () => renderCalculation(false));
 form.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (renderCalculation(true)) $('#payment-card-section').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  if (renderCalculation(true)) { $('#payment-card-section').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); announceAndFocus('card-title'); }
 });
 $('#print-card').addEventListener('click', () => printMode('card'));
 $('#copy-terms').addEventListener('click', copyWording);
@@ -306,7 +320,7 @@ $('#import-json').addEventListener('change', async (event) => {
     for (const record of data.history || []) await db.saveHistory(record);
     for (const template of data.templates || []) await db.saveTemplate(template);
     [historyRecords, templates] = await Promise.all([db.getHistory(), db.getTemplates()]); renderCalculation(); renderHistory(); renderTemplates(); showToast('Imported local data successfully.');
-  } catch (error) { showToast(error instanceof Error ? error.message : 'Could not import this file.'); }
+  } catch { showToast('This file is not an Early Pay Terms JSON export. Choose a JSON file exported by this app.'); }
   (event.target as HTMLInputElement).value = '';
 });
 $('#clear-data').addEventListener('click', async () => {
@@ -324,12 +338,12 @@ async function updateNetworkStatus(): Promise<void> {
 }
 function setNetworkStatus(online: boolean): void {
   const status = $('#network-status'); status.classList.toggle('offline', !online);
-  status.querySelector('span')!.textContent = online ? 'Ready offline' : 'Working offline';
+  status.querySelector('span')!.textContent = online ? (navigator.serviceWorker?.controller ? 'Ready offline' : 'Online') : 'Working offline';
 }
 addEventListener('online', () => void updateNetworkStatus()); addEventListener('offline', () => setNetworkStatus(false));
 
 function setupServiceWorker(): void {
-  if (!('serviceWorker' in navigator)) return;
+  if (!('serviceWorker' in navigator)) { $('#network-status span')!.textContent = 'Offline setup failed'; return; }
   navigator.serviceWorker.register('/sw.js').then((registration) => {
     const wasAlreadyControlled = Boolean(navigator.serviceWorker.controller);
     let refreshing = false;
@@ -338,7 +352,27 @@ function setupServiceWorker(): void {
       showToast('A fresh version is ready.', { label: 'Reload', run: () => location.reload() });
     });
     registration.update().catch(() => undefined);
-  }).catch(() => showToast('Offline setup could not finish. The calculator still works while this page is open.'));
+  }).catch(() => { $('#network-status span')!.textContent = 'Offline setup failed'; showToast('Offline setup failed. Check your connection, then reload to try again.'); });
 }
+
+function announceAndFocus(id: string): void {
+  const heading = document.getElementById(id);
+  if (!heading) return;
+  heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true });
+  const live = document.getElementById('route-announcement'); if (live) live.textContent = heading.textContent || '';
+}
+
+document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => link.addEventListener('click', () => {
+  const id = link.getAttribute('href')?.slice(1); const section = id ? document.getElementById(id) : null;
+  const heading = section?.querySelector<HTMLElement>('h2,h1');
+  if (heading) window.setTimeout(() => announceAndFocus(heading.id), 250);
+}));
+
+document.querySelector<HTMLButtonElement>('#reset-demo')?.addEventListener('click', async () => {
+  await db.clearDemo(); location.href = '/demo';
+});
+document.querySelector<HTMLButtonElement>('#start-real')?.addEventListener('click', async () => {
+  await db.clearDemo(); location.href = '/';
+});
 
 void initialize();

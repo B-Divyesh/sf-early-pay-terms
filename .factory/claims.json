@@ -1,0 +1,9 @@
+[
+  {"id":"demo-isolation","claim":"Try it with sample data uses a separate browser database and does not save to real calculations.","where":"hero, demo banner, privacy policy","test":"npm test -- --grep @claim:demo-isolation","sandbox":"fresh production and demo browser contexts"},
+  {"id":"payment-card","claim":"Calculates the discounted amount, deadline, and later balance in a payment card.","where":"hero, calculator, README","test":"npm test -- --grep @claim:payment-card","sandbox":"fresh demo data"},
+  {"id":"browser-privacy","claim":"Invoice figures stay in this browser during normal calculator use.","where":"hero, footer, privacy policy","test":"npm test -- --grep @claim:browser-privacy","sandbox":"request log through demo calculation and export"},
+  {"id":"exports","claim":"Export does not require Plus. JSON keeps the saved fields and CSV lists saved amounts.","where":"data tools, README","test":"npm test -- --grep @claim:exports","sandbox":"fresh demo data and download assertions"},
+  {"id":"offline-reload","claim":"Works offline after the first visit.","where":"hero, README","test":"npm test -- --grep @claim:offline-reload","sandbox":"service-worker-controlled demo context set offline before reload"},
+  {"id":"currencies","claim":"Calculates in EUR, USD, GBP, CHF, INR, JPY, and BHD, with cash rounding where available.","where":"README","test":"npm test -- --grep @claim:currencies","sandbox":"fresh demo calculator"},
+  {"id":"receipt-validation","claim":"A paid-on-time receipt requires the full discounted payment by the deadline.","where":"receipt dialog, README","test":"npm test -- --grep @claim:receipt-validation","sandbox":"recorded valid license fixture and demo data"}
+]
