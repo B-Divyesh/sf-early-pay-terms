@@ -17,6 +17,18 @@ test('@claim:demo-isolation opens a populated sample and cannot read production 
   await real.close(); await demo.close();
 });
 
+test('query demo mode has its own metadata and reset only replaces sample data', async ({ browser }) => {
+  const context = await browser.newContext(); const page = await context.newPage();
+  await page.goto('/?demo=1'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  await expect(page).toHaveTitle('Demo — Early Pay Terms');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://early-pay-terms.sociobot.in/demo');
+  await page.getByLabel('Invoice reference').fill('RESET-ONLY'); await page.waitForTimeout(350);
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page).toHaveURL(/\/demo$/); await expect(page.getByLabel('Invoice reference')).toHaveValue('HARBOR-1042');
+  await expect(page.getByText('Demo — sample data, nothing is saved')).toBeVisible();
+  await context.close();
+});
+
 test('@claim:payment-card calculates all visible card values from sample data', async ({ page }) => {
   await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
   await page.locator('#netAmount').fill('1250'); await page.locator('#taxAmount').fill('250');
