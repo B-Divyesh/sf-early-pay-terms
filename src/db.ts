@@ -48,11 +48,9 @@ export const db = {
   },
   clearDemo: async () => {
     if (DB_NAME !== 'demo:early-pay-terms') return;
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.deleteDatabase(DB_NAME);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('Close other demo tabs, then reset the demo again.'));
-    });
+    // Clearing all stores in one transaction is deterministic even when the
+    // current tab has just finished an autosave. A database deletion can be
+    // blocked by that short-lived connection and leave stale sample edits.
+    await db.clearAll();
   }
 };

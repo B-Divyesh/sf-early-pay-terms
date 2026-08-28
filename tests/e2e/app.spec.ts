@@ -51,18 +51,20 @@ test('@claim:payment-card calculates all visible card values from sample data', 
 test('@claim:browser-privacy demo calculation and export make no third-party requests', async ({ page }) => {
   const urls: string[] = []; page.on('request', r => urls.push(r.url()));
   await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  const origin = new URL(page.url()).origin;
   const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export JSON' }).click(); await (await download).delete();
-  expect(urls.every(url => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(urls.every(url => new URL(url).origin === origin)).toBe(true);
 });
 
 test('@claim:exports downloads JSON and CSV without Plus', async ({ page }) => {
   const requests: string[] = []; page.on('request', request => requests.push(request.url()));
   await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
+  const origin = new URL(page.url()).origin;
   const json = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export JSON' }).click();
   const jsonPath = await (await json).path(); expect(jsonPath && (await readFile(jsonPath, 'utf8')).includes('HARBOR-1042')).toBe(true);
   const csv = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export CSV' }).click();
   const csvDownload = await csv; const csvPath = await csvDownload.path(); expect(csvDownload.suggestedFilename()).toContain('.csv'); expect(csvPath && (await readFile(csvPath, 'utf8')).includes('invoice_reference')).toBe(true);
-  expect(requests.every(url => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
 });
 
 test('@claim:offline-reload works offline after the first visit', async ({ page, context }) => {
@@ -128,13 +130,13 @@ test('@claim:plus-sale-state renders no checkout or purchase action', async ({ p
 
 test('@claim:license-check-privacy sends only the token to the Sociobot verification endpoint', async ({ page }) => {
   let requestUrl = ''; let method = ''; let body: string | null = 'unset';
-  await page.route('https://pilot-api.sociobot.in/api/v1/products/early-pay-terms/verify?*', async route => {
+  await page.route(/https:\/\/(?:pilot-)?api\.sociobot\.in\/api\/v1\/products\/early-pay-terms\/verify\?.*/, async route => {
     requestUrl = route.request().url(); method = route.request().method(); body = route.request().postData();
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ valid: true, reason: 'ok' }) });
   });
   await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor();
   await page.getByText('Have a license? Restore it').click(); await page.getByLabel('License token').fill('fixture-token'); await page.getByRole('button', { name: 'Verify license' }).click(); await expect(page.locator('#license-state')).toContainText('Plus is active');
-  const url = new URL(requestUrl); expect(url.origin).toBe('https://pilot-api.sociobot.in'); expect(url.pathname).toBe('/api/v1/products/early-pay-terms/verify'); expect([...url.searchParams.keys()]).toEqual(['license']); expect(url.searchParams.get('license')).toBe('fixture-token'); expect(method).toBe('GET'); expect(body).toBeNull(); expect(requestUrl).not.toContain('HARBOR-1042');
+  const url = new URL(requestUrl); expect(['https://pilot-api.sociobot.in', 'https://api.sociobot.in']).toContain(url.origin); expect(url.pathname).toBe('/api/v1/products/early-pay-terms/verify'); expect([...url.searchParams.keys()]).toEqual(['license']); expect(url.searchParams.get('license')).toBe('fixture-token'); expect(method).toBe('GET'); expect(body).toBeNull(); expect(requestUrl).not.toContain('HARBOR-1042');
 });
 
 test('@claim:print-payment-card opens print with the complete sample card', async ({ page }) => {
@@ -155,9 +157,10 @@ test('@claim:json-import restores an exported current calculation and saved fiel
 
 test('@claim:no-third-party-runtime uses only same-origin runtime resources', async ({ page }) => {
   const requests: string[] = []; page.on('request', request => requests.push(request.url()));
+  await page.goto('/'); const origin = new URL(page.url()).origin;
   for (const route of ['/', '/demo', '/privacy/', '/terms/']) { await page.goto(route); await expect(page.locator('main')).toBeVisible(); }
   await page.goto('/demo'); await page.locator('#terms-form[data-ready="true"]').waitFor(); const download = page.waitForEvent('download'); await page.getByRole('button', { name: 'Export CSV' }).click(); await (await download).delete();
-  expect(requests.length).toBeGreaterThan(4); expect(requests.every(url => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+  expect(requests.length).toBeGreaterThan(4); expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
 });
 
 test('@claim:product-boundary presents calculation tools without invoice, collection, or accounting actions', async ({ page }) => {
@@ -197,4 +200,5 @@ test('every real route has complete metadata and the shared main navigation', as
   await page.goto('/404.html'); await expect(page).toHaveTitle('404 — Early Pay Terms'); await expect(page.getByRole('heading', { level: 1 })).toContainText('does not exist');
   const config = JSON.parse(await readFile('dist/staticwebapp.config.json', 'utf8')) as { responseOverrides?: { '404'?: { rewrite?: string; statusCode?: number } } };
   expect(config.responseOverrides?.['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
+  if (process.env.PLAYWRIGHT_BASE_URL) { const response = await page.goto('/does-not-exist'); expect(response?.status()).toBe(404); await expect(page).toHaveTitle('404 — Early Pay Terms'); }
 });

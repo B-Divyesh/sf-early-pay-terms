@@ -25,7 +25,9 @@ index = index
 await writeFile(indexPath, index);
 
 const files = (await walk(rootPath))
-  .filter((file) => !file.endsWith('sw.js') && !file.endsWith('.map'))
+  // Azure consumes this deployment file instead of serving it. Including it
+  // makes cache.addAll reject and prevents the service worker from installing.
+  .filter((file) => !file.endsWith('sw.js') && !file.endsWith('.map') && !file.endsWith('staticwebapp.config.json'))
   .map((file) => `/${relative(rootPath, file)}`);
 const swPath = join(rootPath, 'sw.js');
 const source = await readFile(swPath, 'utf8');

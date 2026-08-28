@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'early-pay-terms-v1';
+const CACHE_VERSION = 'early-pay-terms-v2';
 const PRECACHE = __PRECACHE__;
 
 self.addEventListener('install', (event) => {
