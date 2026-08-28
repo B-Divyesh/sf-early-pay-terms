@@ -2,7 +2,7 @@
 
 Work order: `early-pay-terms-polish-2`
 
-Repair commits: `4020f6a`, `5e6d653`
+Repair commits: `4020f6a`, `5e6d653`, plus the browser-suite reliability repair recorded below.
 
 Final deployment ID: `6b04f6fa-d33e-4e0b-a550-e4ae139936f0`
 
@@ -24,6 +24,13 @@ Live URL: <https://early-pay-terms.sociobot.in>
 AI was not added. The researched task is deterministic financial calculation, and the brief does not benefit from model output.
 
 ## Exact verification
+
+### Browser-suite reliability repair
+
+- `tests/e2e/fixtures.ts` now gives each Playwright spec a new Chromium process, browser context, and page, then closes all three during fixture teardown. The suite runs one spec at a time with `CI=1`; it does not reuse a browser lifecycle across specs.
+- The tests no longer sleep for a debounced persistence guess. The app marks `#terms-form[data-draft-state="saved"]` only after IndexedDB resolves, and persistence tests wait for that observable state.
+- Chromium is explicitly 1440×900 and mobile is explicitly 390×844. Additional contexts inherit the project settings, so claim tests run at both declared viewports.
+- Local evidence before the final clean clone: `CI=1 npm test` passed TypeScript, 7/7 Vitest tests, the production build, and 42/42 Playwright tests. The final repeated clean-clone evidence and deployment check are appended after release.
 
 ### Final clean clone
 

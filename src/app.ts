@@ -23,6 +23,19 @@ let deletedRecord: SavedCalculation | null = null;
 let undoTimer = 0;
 let draftTimer = 0;
 
+function scheduleDraftSave(input: CalculationInput): void {
+  clearTimeout(draftTimer);
+  form.dataset.draftState = 'saving';
+  draftTimer = window.setTimeout(() => {
+    void db.saveDraft(input).then(() => {
+      form.dataset.draftState = 'saved';
+    }).catch(() => {
+      form.dataset.draftState = 'error';
+      showToast('Your browser blocked local storage. Export JSON now or allow site storage, then try again.');
+    });
+  }, 250);
+}
+
 function inputElement(name: keyof CalculationInput): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
   return form.elements.namedItem(name) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 }
@@ -115,8 +128,7 @@ function roundingLabel(input: CalculationInput): string {
 
 function renderCalculation(showErrors = false): boolean {
   currentInput = readInput();
-  clearTimeout(draftTimer);
-  draftTimer = window.setTimeout(() => db.saveDraft(currentInput).catch(() => showToast('Your browser blocked local storage. Export JSON now or allow site storage, then try again.')), 250);
+  scheduleDraftSave(currentInput);
   if (!currentInput.netAmount.trim()) {
     currentResult = null; $('#empty-result').removeAttribute('hidden'); $('#calculation-result').setAttribute('hidden', '');
     $('#payment-card-section').setAttribute('hidden', ''); setError(''); return false;

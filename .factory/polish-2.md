@@ -125,3 +125,13 @@ Evidence shorthand:
 | F-1-80 | Import error identifies the accepted exported JSON file. | `@claim:json-import`; source/error-path inspection |
 
 No finding is deferred. During the first live pass, the production host’s non-served configuration file exposed a service-worker install failure; cache v2 now excludes that file. Live demo reset was also made transactional to avoid an IndexedDB deletion/autosave race. Both fixes were redeployed and rechecked.
+
+## Controller evidence review — browser-suite reliability
+
+| Finding | Change made | Evidence |
+| --- | --- | --- |
+| Browser lifecycle could fail after an unrelated spec | Added `tests/e2e/fixtures.ts`. Every browser spec now launches, owns, and closes a fresh Chromium process, isolated browser context, and page; extra contexts use the active project’s exact viewport settings. No browser, context, page, cookies, IndexedDB, route handler, or page event listener is shared with another spec. | `CI=1 npm test`: 7/7 Vitest and 42/42 Playwright passed after the change. A second clean-clone repeat is recorded in the handoff. |
+| Timing-based storage assertions could race autosave | Replaced all `waitForTimeout` calls with `#terms-form[data-draft-state="saved"]`, which the app exposes only after the IndexedDB draft transaction resolves. Route entry waits for `data-ready="true"` before interactions. | `@claim:demo-isolation`, `@claim:draft-persistence`, and `@claim:json-import` pass in desktop and 390×844 projects. |
+| Desktop viewport was implicit | Pinned the Chromium project to the reviewed 1440×900 viewport and preserved the 390×844 mobile project. Secondary contexts inherit those project settings. | `@claim:demo-isolation` proves the first-screen sample at both exact viewports. |
+
+The suite remains serial (`workers: 1`) under `CI=1`; `npm run test:stable` runs the complete quality gate twice without reusing a Playwright browser lifecycle between specs.

@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "tsc --noEmit && vitest run tests/calculator.test.ts && npm run build && playwright test",
     "test:unit": "vitest run tests/calculator.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "CI=1 playwright test",
+    "test:stable": "CI=1 npm test && CI=1 npm test"
   },
   "dependencies": {
     "vite": "^7.3.6"
