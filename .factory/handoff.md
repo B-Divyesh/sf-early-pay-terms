@@ -2,9 +2,9 @@
 
 Work order: `early-pay-terms-polish-2`
 
-Repair commits: `4020f6a`, `5e6d653`, plus the browser-suite reliability repair recorded below.
+Repair commits: `4020f6a`, `5e6d653`, `674ba911b998710c0ae2f657ccc02744486b4680`, and `6f4d0c71b6207663eba15fb01d0594bfd73c3aef`.
 
-Final deployment ID: `6b04f6fa-d33e-4e0b-a550-e4ae139936f0`
+Final deployment ID: `822be708-1606-4c56-9b5d-7bf3411f9b83`
 
 Live URL: <https://early-pay-terms.sociobot.in>
 
@@ -54,7 +54,7 @@ npm test
 
 - Playwright axe integration found zero violations on the demo in desktop and mobile projects.
 - `verify-url.sh` passed local and final live `/`, `/demo`, `/privacy/`, and `/terms/`: correct title, `lang=en`, one H1, one main, no missing alt text, no unlabeled buttons, and no console errors.
-- Final live load times reported by that verifier: root 685 ms, demo 826 ms, privacy 560 ms, terms 688 ms.
+- Final live load times reported by the post-deploy verifier: root 943 ms, demo 624 ms, privacy 732 ms, terms 719 ms.
 - Request-log tests passed for normal calculations, both exports, all real routes, and runtime assets. Only same-origin requests occurred unless the explicit mocked license check was invoked.
 - License test asserted the Sociobot product-verification destination, GET method, exactly one license query key, no request body, and no invoice reference.
 - Offline reload passed locally, from the final clean clone, and on the final live deployment in both browser projects.
@@ -68,7 +68,7 @@ npm test
 PLAYWRIGHT_BASE_URL=https://early-pay-terms.sociobot.in npx playwright test
 ```
 
-The final live run passed 41 tests. Chromium itself crashed before creating the remaining mobile receipt-test context; an immediate isolated rerun passed receipt validation in both projects (2/2). A separate final live reset/offline run passed 4/4. No product assertion failed after the final redeploy.
+After the browser-lifecycle repair, `CI=1 PLAYWRIGHT_BASE_URL=https://early-pay-terms.sociobot.in npx playwright test` passed 42/42 tests in one uninterrupted live run. That includes all 17 tagged claims, desktop and mobile axe checks, history focus restoration, metadata/header/404 checks, and controlled offline reload. The cold verifier again passed `/`, `/demo`, `/privacy/`, and `/terms/` with no console errors; `/does-not-exist` returned HTTP 404 and the designed title/h1.
 
 Committed cold screenshots from the final live deployment:
 
@@ -98,7 +98,7 @@ The tested `dist/` was uploaded with:
 /opt/fleet/lib/deploy-static.sh early-pay-terms dist
 ```
 
-Final Azure Static Web Apps deployment succeeded under ID `6b04f6fa-d33e-4e0b-a550-e4ae139936f0`, and the custom domain returned 200 immediately afterward.
+Final Azure Static Web Apps deployment succeeded under ID `822be708-1606-4c56-9b5d-7bf3411f9b83`, and the custom domain returned 200 immediately afterward.
 
 ## Known gaps
 

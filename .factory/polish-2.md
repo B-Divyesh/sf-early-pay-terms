@@ -135,3 +135,13 @@ No finding is deferred. During the first live pass, the production host’s non-
 | Desktop viewport was implicit | Pinned the Chromium project to the reviewed 1440×900 viewport and preserved the 390×844 mobile project. Secondary contexts inherit those project settings. | `@claim:demo-isolation` proves the first-screen sample at both exact viewports. |
 
 The suite remains serial (`workers: 1`) under `CI=1`; `npm run test:stable` runs the complete quality gate twice without reusing a Playwright browser lifecycle between specs.
+
+## Final evidence convention and live recheck
+
+Every row above is evidenced by its named test in the Evidence column, the retained product screenshots at `.factory/evidence/polish-2-demo-desktop.png` and `.factory/evidence/polish-2-demo-mobile.png`, and the final cold live checks below. The screenshots show the representative landing/demo first screen; focused route checks cover the corresponding legal and 404 findings.
+
+- `https://early-pay-terms.sociobot.in/` — 200, correct root title, one h1/main, no console errors.
+- `https://early-pay-terms.sociobot.in/demo` and `?demo=1` — seeded isolated sample, persistent banner/reset/start-real controls, Demo metadata, and payment card output.
+- `https://early-pay-terms.sociobot.in/privacy/` and `/terms/` — 200, per-route titles, shared navigation, legal links, one h1/main, no console errors.
+- `https://early-pay-terms.sociobot.in/does-not-exist` — 404 with `404 — Early Pay Terms` and a route-specific h1.
+- `CI=1 PLAYWRIGHT_BASE_URL=https://early-pay-terms.sociobot.in npx playwright test` — 42/42 passed after deployment, including all 17 tagged claims, axe, focus/back, mobile, metadata, offline, and 404 coverage.
