@@ -33,6 +33,7 @@ Cold deployed checks, evidence in `/tmp/ept-live-retry1`:
 
 - `verify-url.sh https://early-pay-terms.sociobot.in/demo` passed: Demo title, `lang=en`, one H1, main, image alt text, labelled buttons, and no console errors. It wrote desktop/mobile screenshots and `verify.json`.
 - Cold 390px Playwright check at `/?demo=1`: title `Demo — Early Pay Terms`; canonical `https://early-pay-terms.sociobot.in/demo`; banner visible; sample reference `HARBOR-1042`; amount `€1,470.00`; no console errors; no horizontal overflow. Screenshot: `/tmp/ept-live-retry1/live-demo-query-mobile.png`.
+- In a separate cold live browser, changing the sample reference to `LIVE-RESET-ONLY` and selecting Reset demo returned to `/demo` with `HARBOR-1042` and the persistent banner.
 - `GET /does-not-exist` returned 404 with the designed not-found page.
 - `HEAD /manifest.webmanifest` returned `application/manifest+json`; CSP and Permissions-Policy are present.
 - `HEAD /assets/share.png` returned `Cache-Control: public, max-age=31536000, immutable`.
