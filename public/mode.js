@@ -2,8 +2,12 @@ if (location.pathname === '/demo' || new URLSearchParams(location.search).get('d
   document.documentElement.dataset.demo = 'true';
   document.title = 'Demo — Early Pay Terms';
   const demoUrl = 'https://early-pay-terms.sociobot.in/demo';
+  const demoDescription = 'Try a sample supplier invoice with calculated early amount, deadline, later balance, and payment card.';
+  document.querySelector('meta[name="description"]')?.setAttribute('content', demoDescription);
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', demoUrl);
   document.querySelector('meta[property="og:url"]')?.setAttribute('content', demoUrl);
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'Demo — Early Pay Terms');
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', demoDescription);
   document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', 'Demo — Early Pay Terms');
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', demoDescription);
 }

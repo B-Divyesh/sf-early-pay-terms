@@ -10,8 +10,9 @@ Try the isolated sample at https://early-pay-terms.sociobot.in/?demo=1 or `/demo
 - Lets you apply a discount to the full invoice, net plus tax, or net only.
 - Creates a payment card that opens the browser print flow for printing or saving as PDF.
 - Saves the current calculation in this browser when storage is available.
-- Exports and imports JSON, and exports saved calculations as CSV.
+- Exports and imports JSON, and exports saved versions as CSV.
 - Keeps the app available offline after the first visit.
+- A verified existing Plus license enables saved versions, reusable templates, and paid-on-time receipts.
 
 You choose and check the tax and contract rule. This calculator is not legal, tax, or accounting advice.
 
@@ -19,7 +20,9 @@ You choose and check the tax and contract rule. This calculator is not legal, ta
 
 `/demo` (or `?demo=1`) loads Harbor Paper Co.’s sample invoice in a separate `demo:early-pay-terms` browser database. Reset demo clears only that sample data. Start for real removes it before opening the real calculator.
 
-Normal calculator use keeps invoice figures in the browser. JSON and CSV exports are made locally. The site includes no analytics, advertising pixels, remote fonts, or third-party runtime scripts. License restoration sends only the entered token to Sociobot’s product verification endpoint. See the [privacy policy](https://early-pay-terms.sociobot.in/privacy/) and [terms](https://early-pay-terms.sociobot.in/terms/).
+Normal calculator use keeps invoice figures in the browser. JSON and CSV exports are made locally. The site includes no analytics, advertising pixels, remote fonts, or third-party runtime scripts.
+
+License restoration sends only the entered token to Sociobot’s product verification endpoint. The restore form accepts valid licenses and rejects invalid ones. It reports connection errors and retains a valid result after reload. See the [privacy policy](https://early-pay-terms.sociobot.in/privacy/) and [terms](https://early-pay-terms.sociobot.in/terms/).
 
 ## Run locally
 

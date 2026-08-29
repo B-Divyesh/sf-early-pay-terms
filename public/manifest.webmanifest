@@ -1,9 +1,9 @@
 {
   "name": "Early Pay Terms",
   "short_name": "Pay Terms",
-  "description": "Exact early-payment discount terms and invoice attachments.",
+  "description": "Calculate early-payment discount terms and create invoice payment cards.",
   "id": "/",
-  "start_url": "/?source=pwa&v=1.0.0",
+  "start_url": "/?source=pwa&v=1.0.1",
   "scope": "/",
   "display": "standalone",
   "background_color": "#153c3b",

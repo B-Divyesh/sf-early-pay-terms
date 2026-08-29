@@ -1,7 +1,7 @@
 import './style.css';
 import { calculate, CalculationError, formatMoney, minorToDecimal, parseMinor, serializeResult } from './calculator';
 import { db } from './db';
-import { captureReturnedLicense, checkoutUrl, isOptimisticallyUnlocked, storedToken, verifyLicense } from './license';
+import { captureReturnedLicense, clearDemoLicense, isOptimisticallyUnlocked, storedToken, verifyLicense } from './license';
 import { CURRENCIES, emptyInput, type CalculationInput, type CalculationResult, type DiscountMethod, type RoundingMode, type SavedCalculation, type SavedTemplate } from './types';
 
 const $ = <T extends Element>(selector: string) => document.querySelector<T>(selector)!;
@@ -106,7 +106,7 @@ function updateDocument(input: CalculationInput, result: CalculationResult): voi
   $('#card-due-date').textContent = humanDate(input.dueDate);
   const note = $('#card-note'); note.textContent = input.note; note.toggleAttribute('hidden', !input.note);
   $('#card-method').textContent = `${result.formula} Discount rounded ${roundingLabel(input)}. Full discounted amount must be received by the deadline. Verify regional tax treatment before sending.`;
-  $('#card-version').textContent = 'Unsaved calculation · engine v1';
+  $('#card-version').textContent = 'Current calculation · engine v1';
 }
 
 function updateDemoSummary(input: CalculationInput, result: CalculationResult): void {
@@ -159,18 +159,17 @@ function renderCalculation(showErrors = false): boolean {
 
 function requirePlus(): boolean {
   if (unlocked) return true;
-  $('#unlock').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  showToast('Plus is needed for saved versions, templates, and receipts.');
+  $('#license-restore').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  showToast('Restore an existing Plus license to use saved versions, templates, and receipts.');
   return false;
 }
 
 function updateLicenseUI(message?: string): void {
   document.body.classList.toggle('is-unlocked', unlocked);
   const state = $('#license-state');
-  state.innerHTML = unlocked ? '<span class="status-lamp"></span> Plus is active on this device' : '<span class="status-lamp"></span> Free calculator active';
+  state.innerHTML = unlocked ? '<span class="status-lamp"></span> Plus license active' : '<span class="status-lamp"></span> No Plus license active';
+  document.querySelectorAll<HTMLElement>('.premium-control').forEach((control) => control.toggleAttribute('hidden', !unlocked));
   if (message) showToast(message);
-  const unlockNav = document.querySelector<HTMLElement>('#unlock-nav');
-  if (unlockNav) unlockNav.textContent = unlocked ? 'Plus active' : 'Unlock';
 }
 
 async function saveVersion(): Promise<void> {
@@ -252,7 +251,7 @@ async function initialize(): Promise<void> {
     $('#hero-title').textContent = 'Review sample early-payment invoice terms';
     const action = $('#hero-demo-action') as HTMLAnchorElement;
     action.href = '#payment-card-section';
-    action.innerHTML = 'View sample payment card <span aria-hidden="true">→</span>';
+    action.textContent = 'View sample payment card';
     $('#hero-action-note').textContent = 'The populated calculator and saved version are below.';
   }
   fillForm((await db.loadDraft().catch(() => undefined)) || (demoMode ? demoInput : emptyInput()));
@@ -271,8 +270,6 @@ async function initialize(): Promise<void> {
     }).catch((error: Error) => showToast(error.message));
   }
 
-  const buy = $('#buy-link') as HTMLAnchorElement | null;
-  if (buy) buy.href = checkoutUrl();
   setupServiceWorker(); updateNetworkStatus();
   form.inert = false;
   form.removeAttribute('aria-busy');
@@ -411,10 +408,14 @@ addEventListener('pageshow', () => {
 });
 
 document.querySelector<HTMLButtonElement>('#reset-demo')?.addEventListener('click', async () => {
-  await db.clearDemo(); location.href = '/demo';
+  clearTimeout(draftTimer);
+  form.inert = true;
+  await db.clearDemo(); clearDemoLicense(); location.href = '/demo';
 });
 document.querySelector<HTMLButtonElement>('#start-real')?.addEventListener('click', async () => {
-  await db.clearDemo(); location.href = '/';
+  clearTimeout(draftTimer);
+  form.inert = true;
+  await db.clearDemo(); clearDemoLicense(); location.href = '/';
 });
 
 void initialize().then(() => { window.setTimeout(restoreFragment, 0); window.setTimeout(restoreFragment, 300); });

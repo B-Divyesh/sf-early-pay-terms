@@ -1,1 +1,1 @@
-Calculate early-payment invoice terms for small B2B suppliers.
+Calculate discounted invoice amounts, deadlines, and later balances for small B2B suppliers.

@@ -5,7 +5,7 @@ type IsolatedSession = {
   browser: Browser;
   context: BrowserContext;
   page: Page;
-  newContext: () => Promise<BrowserContext>;
+  newContext: (options?: BrowserContextOptions) => Promise<BrowserContext>;
 };
 
 /**
@@ -18,7 +18,7 @@ export const test = base.extend<{ isolated: IsolatedSession }>({
     const browser = await chromium.launch({ headless: true });
     const { baseURL: _baseURL, ...projectUse } = testInfo.project.use;
     const contextOptions = projectUse as BrowserContextOptions;
-    const newContext = () => browser.newContext(contextOptions);
+    const newContext = (options: BrowserContextOptions = {}) => browser.newContext({ ...contextOptions, ...options });
     const context = await newContext();
     const page = await context.newPage();
     try {

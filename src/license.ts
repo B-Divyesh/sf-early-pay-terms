@@ -1,6 +1,7 @@
 const SLUG = 'early-pay-terms';
-const LICENSE_KEY = `sb_license:${SLUG}`;
-const VERDICT_KEY = `sb_license_verdict:${SLUG}`;
+const STORAGE_PREFIX = document.documentElement.dataset.demo === 'true' ? 'demo:' : '';
+const LICENSE_KEY = `${STORAGE_PREFIX}sb_license:${SLUG}`;
+const VERDICT_KEY = `${STORAGE_PREFIX}sb_license_verdict:${SLUG}`;
 const DAY = 86_400_000;
 
 interface Verdict { valid: boolean; checkedAt: number; reason?: string }
@@ -11,8 +12,12 @@ function apiBase(): string {
     : 'https://api.sociobot.in/api/v1';
 }
 
-export function checkoutUrl(): string { return `${apiBase()}/products/${SLUG}/checkout`; }
 export function storedToken(): string { return localStorage.getItem(LICENSE_KEY) || ''; }
+export function clearDemoLicense(): void {
+  if (STORAGE_PREFIX !== 'demo:') return;
+  localStorage.removeItem(LICENSE_KEY);
+  localStorage.removeItem(VERDICT_KEY);
+}
 function storedVerdict(): Verdict | null {
   try { return JSON.parse(localStorage.getItem(VERDICT_KEY) || 'null') as Verdict | null; } catch { return null; }
 }
