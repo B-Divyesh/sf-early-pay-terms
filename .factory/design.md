@@ -42,7 +42,7 @@ Primary text contrast exceeds 13:1 on paper; inverse text is off-white on enamel
 
 ## Interaction grammar
 
-- Changing any input recalculates immediately; the result dial gives a brief mechanical settle and the explanation line spells out the formula.
+- Changing any input recalculates immediately; the stable result readout and explanation line spell out the amount and formula without obscuring a number in motion.
 - The deadline has a notched timeline: issue → early deadline → due date. Dates and states always remain textual.
 - Primary buttons resemble broad labeled switches. Their pressed state moves down by 1px. Focus uses a 3px brass/ink double ring.
 - Optional complexity (tax treatment, basis, rounding) starts visible because it determines correctness. Explanations sit beside the choice rather than behind tooltips.
@@ -51,7 +51,7 @@ Primary text contrast exceeds 13:1 on paper; inverse text is off-white on enamel
 
 ## Motion policy
 
-- 180–240ms transitions, limited to opacity and transform: readout settle, notice arrival, and section reveal from its logical origin.
+- 180–240ms transitions are limited to switch press feedback and notice arrival. Financial readouts update without motion so every number remains legible.
 - Nothing loops, flashes, or moves decoratively. Print/export has no animation.
 - Under `prefers-reduced-motion: reduce`, scrolling is instant, transitions are removed, and result changes use only an immediate color-neutral outline/text update.
 
