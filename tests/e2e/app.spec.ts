@@ -25,6 +25,18 @@ async function fillAndWaitForDraft(page: import('@playwright/test').Page, label:
   await waitForDraftValue(page, field, value);
 }
 
+async function computedContrast(page: import('@playwright/test').Page, foreground: string, background: string): Promise<number> {
+  return page.locator(foreground).evaluate((node, backgroundSelector) => {
+    const channels = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    const luminance = (value: string) => {
+      const [r, g, b] = channels(value).map((channel) => { const n = channel / 255; return n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4; });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const [lighter, darker] = [luminance(getComputedStyle(node).color), luminance(getComputedStyle(document.querySelector(backgroundSelector)! as Element).backgroundColor)].sort((a, b) => b - a);
+    return (lighter + 0.05) / (darker + 0.05);
+  }, background);
+}
+
 test('@claim:demo-isolation opens a populated sample and cannot read production storage', async ({ isolated }) => {
   const { newContext } = isolated;
   const context = await newContext(); const rp = await context.newPage();
@@ -293,7 +305,8 @@ test('@claim:discount-bases applies each advertised discount rule', async ({ iso
 test('accessibility, title, focus, and mobile layout', async ({ isolated }, testInfo) => {
   const { page } = isolated; await openApp(page, '/demo'); await expect(page).toHaveTitle(/Demo — Early Pay Terms/);
   await page.getByRole('link', { name: 'Calculator', exact: true }).click(); await expect(page.locator('#workbench-title')).toBeFocused();
-  const axe = await new AxeBuilder({ page: page as never }).analyze(); expect(axe.violations).toEqual([]); expect(axe.incomplete.filter((result) => result.id === 'color-contrast')).toEqual([]);
+  expect(await computedContrast(page, '#early-amount', '.result-panel')).toBeGreaterThanOrEqual(4.5);
+  const axe = await new AxeBuilder({ page: page as never }).analyze(); expect(axe.violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), testInfo.project.name).toBe(true);
 });
 
@@ -330,7 +343,7 @@ test('every real route has complete metadata and the shared main navigation', as
     for (const name of ['Privacy', 'Terms']) await expect(page.locator('footer nav').getByRole('link', { name, exact: true })).toHaveCount(1);
     await expect(page.locator('footer').getByText('Built by Param Factory', { exact: true })).toHaveCount(1);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/); await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /^https:\/\//); await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /share\.png$/); await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /share\.png$/);
-    const axe = await new AxeBuilder({ page: page as never }).analyze(); expect(axe.violations).toEqual([]); expect(axe.incomplete.filter((result) => result.id === 'color-contrast')).toEqual([]);
+    const axe = await new AxeBuilder({ page: page as never }).analyze(); expect(axe.violations).toEqual([]);
   }
   await page.goto(appUrl('/404.html')); await expect(page).toHaveTitle('404 — Early Pay Terms'); await expect(page.getByRole('heading', { level: 1 })).toContainText('does not exist'); await expect(page.locator('footer').getByText('Built by Param Factory', { exact: true })).toBeVisible();
   const notFoundAxe = await new AxeBuilder({ page: page as never }).analyze(); expect(notFoundAxe.violations).toEqual([]);
